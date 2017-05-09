@@ -19,6 +19,29 @@ public class Fibonacci {
         return f(n, cache);
     }
 
+    private class ReservedFibonacciBlocker implements ForkJoinPool.ManagedBlocker {
+        private final int n;
+        private final Map<Integer, BigInteger> cache;
+        private BigInteger result;
+
+        public ReservedFibonacciBlocker(int n, Map<Integer, BigInteger> cache) {
+            this.n = n;
+            this.cache = cache;
+        }
+
+        public boolean isReleasable() {
+            return (result = cache.get(n)) != RESERVED;
+        }
+
+        public boolean block() throws InterruptedException {
+            synchronized (RESERVED) {
+                while (!isReleasable()) {
+                    RESERVED.wait();
+                }
+            }
+        }
+    }
+
     private BigInteger f(int n, Map<Integer, BigInteger> cache) {
         BigInteger result = cache.putIfAbsent(n, RESERVED);
         if (result == null) {
