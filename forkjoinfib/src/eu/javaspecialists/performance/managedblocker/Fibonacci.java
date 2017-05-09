@@ -10,7 +10,7 @@ public class Fibonacci {
     // demo 3: test100_000_000() time = 15048
     // demo 4: test100_000_000() time = 10387
 
-
+    private final BigInteger RESERVED = BigInteger.valueOf(-1000);
 
     public BigInteger f(int n) {
         Map<Integer, BigInteger> cache = new ConcurrentHashMap<>();
@@ -20,7 +20,7 @@ public class Fibonacci {
     }
 
     private BigInteger f(int n, Map<Integer, BigInteger> cache) {
-        BigInteger result = cache.get(n);
+        BigInteger result = cache.putIfAbsent(n, RESERVED);
         if (result == null) {
             int half = (n + 1) / 2;
 
@@ -36,17 +36,31 @@ public class Fibonacci {
             long time = n > 10000 ? System.currentTimeMillis() : 0;
             try {
                 if (n % 2 == 1) {
-                    result =  f0.multiply(f0).add(f1.multiply(f1));
+                    result = f0.multiply(f0).add(f1.multiply(f1));
                 } else {
                     result = f0.shiftLeft(1).add(f1).multiply(f1);
                 }
-                cache.put(n, result);
+                synchronized (RESERVED) {
+                    cache.put(n, result);
+                    RESERVED.notifyAll();
+                }
             } finally {
                 time = n > 10000 ? System.currentTimeMillis() - time : 0;
                 if (time > 50) {
                     System.out.println("fib(" + n +
                         ") took " + time + " ms");
                 }
+            }
+        } else if (result == RESERVED) {
+            // wait until result != RESERVED
+            try {
+                synchronized (RESERVED) {
+                    while ((result = cache.get(n)) == RESERVED) {
+                        RESERVED.wait();
+                    }
+                }
+            } catch (InterruptedException e) {
+                throw new CancellationException("interrupted");
             }
         }
         return result;
