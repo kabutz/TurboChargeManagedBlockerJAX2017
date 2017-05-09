@@ -1,1 +1,0 @@
-# TurboChargeManagedBlockerJAX2017
