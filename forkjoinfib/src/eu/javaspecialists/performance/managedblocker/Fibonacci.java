@@ -9,6 +9,9 @@ public class Fibonacci {
     // demo 2: test100_000_000() time = 22691
     // demo 3: test100_000_000() time = 15048
     // demo 4: test100_000_000() time = 10387
+    // demo 5: test100_000_000() time = 7449
+    // demo 6: test100_000_000() time = 7513
+
 
     private final BigInteger RESERVED = BigInteger.valueOf(-1000);
 
@@ -39,6 +42,7 @@ public class Fibonacci {
                     RESERVED.wait();
                 }
             }
+            return true;
         }
     }
 
@@ -77,11 +81,10 @@ public class Fibonacci {
         } else if (result == RESERVED) {
             // wait until result != RESERVED
             try {
-                synchronized (RESERVED) {
-                    while ((result = cache.get(n)) == RESERVED) {
-                        RESERVED.wait();
-                    }
-                }
+                ReservedFibonacciBlocker blocker = new ReservedFibonacciBlocker(n, cache);
+                ForkJoinPool.managedBlock(blocker);
+//                blocker.block();
+                result = blocker.result;
             } catch (InterruptedException e) {
                 throw new CancellationException("interrupted");
             }
