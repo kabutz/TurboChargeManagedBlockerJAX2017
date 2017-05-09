@@ -33,7 +33,7 @@ public class FibonacciTest {
         System.out.println("test1_000() time = " + time);
     }
 
-    @Test
+//    @Test
     public void test1_000_000() {
         long time = System.currentTimeMillis();
         Fibonacci fib = new Fibonacci();
@@ -42,7 +42,7 @@ public class FibonacciTest {
         System.out.println("test1_000_000() time = " + time);
     }
 
-    @Test
+//    @Test
     public void test10_000_000() {
         long time = System.currentTimeMillis();
         Fibonacci fib = new Fibonacci();
